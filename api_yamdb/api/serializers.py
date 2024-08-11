@@ -57,6 +57,13 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True, slug_field='username'
     )
 
+    def validate_username(self, value):
+        """Функция проверяет, что username отличен от me."""
+        if value == 'me':
+            raise serializers.ValidationError(
+                '"Username" должен быть отличен от "me"')
+        return value
+
     class Meta:
         model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date')
@@ -73,4 +80,4 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ('id', 'text', 'author', 'pub_date')
-        read_only_fields = ('title',)
+        read_only_fields = ('review',)

@@ -11,7 +11,7 @@ from reviews.models import Category, Genre, Review, Title
 
 from api.core import CategoryAndGenreViewSet
 from api.permissions import (
-    AdminOrReadOnly, IsAdminOrModeratorOrReadOnly
+    AdminOrReadOnly, IsAdminOrModeratorOrAuthorOrReadOnly
 )
 from api.serializers import (
     CategorySerializer, CommentSerializer, GenreSerializer,
@@ -39,6 +39,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('name', 'year', 'genre', 'category')
+    http_method_names = ["get", "post", "patch", "delete"]
 
     def get_serializer_class(self):
         if self.request.method in ('GET',):
@@ -46,15 +47,11 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleSerializer
 
 
-class ReviewViewSet(mixins.ListModelMixin,
-                    mixins.CreateModelMixin,
-                    mixins.UpdateModelMixin,
-                    mixins.DestroyModelMixin,
-                    viewsets.GenericViewSet):
+class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для модели Review."""
 
     serializer_class = ReviewSerializer
-    permission_classes = (IsAdminOrModeratorOrReadOnly, IsAuthenticated)
+    permission_classes = (IsAdminOrModeratorOrAuthorOrReadOnly,)
     http_method_names = ["get", "post", "patch", "delete"]
 
     def _get_title_or_404(self):
@@ -72,13 +69,11 @@ class ReviewViewSet(mixins.ListModelMixin,
         )
 
 
-class CommentViewSet(mixins.ListModelMixin,
-                     mixins.CreateModelMixin,
-                     mixins.UpdateModelMixin,
-                     mixins.DestroyModelMixin,
-                     viewsets.GenericViewSet):
+class CommentViewSet(viewsets.ModelViewSet):
+    """Вьюсет для модели Comment."""
+
     serializer_class = CommentSerializer
-    permission_classes = (IsAdminOrModeratorOrReadOnly,)
+    permission_classes = (IsAdminOrModeratorOrAuthorOrReadOnly,)
     http_method_names = ["get", "post", "patch", "delete"]
 
     def _get_review_or_404(self):

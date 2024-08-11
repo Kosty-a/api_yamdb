@@ -7,11 +7,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .permissions import IsAdminOrSuperUser
-from .serializers import (CustomUserSerializer_1, CustomUserSerializer_2,
-                          SignUpSerializer)
-from .utils import generate_confirmation_code
-
+from api_users.permissions import IsAdminOrSuperUser
+from api_users.serializers import (
+    CustomUserSerializer_1, CustomUserSerializer_2, SignUpSerializer
+)
+from api_users.utils import generate_confirmation_code
 
 User = get_user_model()
 

@@ -2,13 +2,13 @@ from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from rest_framework import serializers
 
-from .utils import generate_confirmation_code
-
+from api_users.utils import generate_confirmation_code
 
 User = get_user_model()
 
 
 class SignUpSerializer(serializers.ModelSerializer):
+    '''Сериализатор для создания пользователя.'''
 
     class Meta:
         model = User

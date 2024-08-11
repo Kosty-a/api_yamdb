@@ -11,6 +11,8 @@ ROLE_CHOICES = (
 
 
 class CustomUser(AbstractUser):
+    '''Модель пользователя.'''
+
     password = None
     groups = None
     user_permissions = None
