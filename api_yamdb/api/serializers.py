@@ -1,7 +1,9 @@
 from datetime import date as dt
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Avg
 from rest_framework import serializers
+
 from reviews.models import Category, Comment, Genre, Review, Title
 
 
@@ -22,6 +24,8 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class ListDetailTitleSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели Title при GET-запросе."""
+
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
     rating = serializers.SerializerMethodField()
@@ -38,12 +42,23 @@ class ListDetailTitleSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели Title."""
+
     genre = serializers.SlugRelatedField(
         slug_field='slug', many=True, queryset=Genre.objects.all()
     )
     category = serializers.SlugRelatedField(
         slug_field='slug', queryset=Category.objects.all()
     )
+
+    def validate_year(self, value):
+        '''Функция проверяет, что год не более текущего.'''
+        year = dt.today().year
+        if value > year:
+            raise serializers.ValidationError(
+                'Год не может быть больше текущего.'
+            )
+        return value
 
     class Meta:
         model = Title
@@ -57,12 +72,17 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True, slug_field='username'
     )
 
-    def validate_username(self, value):
-        """Функция проверяет, что username отличен от me."""
-        if value == 'me':
-            raise serializers.ValidationError(
-                '"Username" должен быть отличен от "me"')
-        return value
+    def create(self, validated_data):
+        '''Функция проверяет, что автор ранее не оставлял отзыв
+        на данное произведение.
+        '''
+        title = validated_data.get('title')
+        author = validated_data.get('author')
+        try:
+            Review.objects.get(title=title, author=author)
+            raise serializers.ValidationError('Review already exists')
+        except ObjectDoesNotExist:
+            return Review.objects.create(**validated_data)
 
     class Meta:
         model = Review

@@ -1,22 +1,15 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Avg
+from rest_framework import viewsets
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import (
-    AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
-)
-from rest_framework import filters, generics, mixins, viewsets
-from rest_framework.exceptions import NotFound
 from reviews.models import Category, Genre, Review, Title
 
 from api.core import CategoryAndGenreViewSet
-from api.permissions import (
-    AdminOrReadOnly, IsAdminOrModeratorOrAuthorOrReadOnly
-)
-from api.serializers import (
-    CategorySerializer, CommentSerializer, GenreSerializer,
-    ListDetailTitleSerializer, ReviewSerializer, TitleSerializer
-)
+from api.filters import TitleFilter
+from api.permissions import (AdminOrReadOnly,
+                             IsAdminOrModeratorOrAuthorOrReadOnly)
+from api.serializers import (CategorySerializer, CommentSerializer,
+                             GenreSerializer, ListDetailTitleSerializer,
+                             ReviewSerializer, TitleSerializer)
 
 
 class CategoryViewSet(CategoryAndGenreViewSet):
@@ -34,15 +27,16 @@ class GenreViewSet(CategoryAndGenreViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    #queryset = (Title.objects.all().annotate(Avg('review__score')).order_by('name'))
+    """Вьюсет для модели Title."""
+
     queryset = Title.objects.all()
     permission_classes = (AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', 'year', 'genre', 'category')
+    filterset_class = TitleFilter
     http_method_names = ["get", "post", "patch", "delete"]
 
     def get_serializer_class(self):
-        if self.request.method in ('GET',):
+        if self.request.method == 'GET':
             return ListDetailTitleSerializer
         return TitleSerializer
 

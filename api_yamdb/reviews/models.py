@@ -1,10 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-
-from reviews.constants import (
-    LENGHT_SLUG_FIELD, LENGHT_TEXT_FIELD, MAX_REPRESENTATION_LENGHT
-)
+from reviews.constants import (LENGHT_SLUG_FIELD, LENGHT_TEXT_FIELD,
+                               MAX_REPRESENTATION_LENGHT)
 
 User = get_user_model()
 
@@ -18,7 +16,7 @@ class Category(models.Model):
         max_length=LENGHT_TEXT_FIELD,
         verbose_name='Категория'
     )
-    slug = models.CharField(
+    slug = models.SlugField(
         max_length=LENGHT_SLUG_FIELD,
         unique=True,
         verbose_name='Идентификатор'
@@ -43,7 +41,7 @@ class Genre(models.Model):
         max_length=LENGHT_TEXT_FIELD,
         verbose_name='Жанр'
     )
-    slug = models.CharField(
+    slug = models.SlugField(
         max_length=LENGHT_SLUG_FIELD,
         unique=True,
         verbose_name='Идентификатор'
@@ -156,6 +154,10 @@ class Review(models.Model):
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         ordering = ('pub_date',)
+        constraints = [
+            models.UniqueConstraint(fields=['title', 'author'],
+                                    name='unique_review')
+        ]
 
     def __str__(self):
         return self.text[:MAX_REPRESENTATION_LENGHT]
