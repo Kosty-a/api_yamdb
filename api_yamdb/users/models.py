@@ -12,9 +12,9 @@ ROLE_CHOICES = (
 class CustomUser(AbstractUser):
     '''Модель пользователя.'''
 
-    password = None
-    groups = None
-    user_permissions = None
+    # password = None
+    # groups = None
+    # user_permissions = None
 
     username = models.CharField(
         'Имя пользователя', max_length=150, unique=True,
