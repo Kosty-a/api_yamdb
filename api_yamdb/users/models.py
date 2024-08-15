@@ -2,41 +2,49 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
 
+from core.constants import (ADMIN, CONFIRMATION_CODE_LENGTH, MAX_EMAIL_LENGTH,
+                            MAX_USERNAME_LENGTH, MODERATOR, REGEX_USERNAME,
+                            USER, ADMIN)
+from .validators import validate_not_me
+
+
 ROLE_CHOICES = (
-    ('user', 'пользователь'),
-    ('moderator', 'модератор'),
-    ('admin', 'админ')
+    (USER, 'пользователь'),
+    (MODERATOR, 'модератор'),
+    (ADMIN, 'админ')
 )
 
 
 class CustomUser(AbstractUser):
     '''Модель пользователя.'''
 
-    # password = None
-    # groups = None
-    # user_permissions = None
-
     username = models.CharField(
-        'Имя пользователя', max_length=150, unique=True,
+        'Имя пользователя', max_length=MAX_USERNAME_LENGTH, unique=True,
         validators=[
             RegexValidator(
-                regex=r'^[\w.@+-]+\Z'),
+                regex=REGEX_USERNAME),
+            validate_not_me,
         ])
-    email = models.EmailField('Почта', max_length=254, unique=True)
-    first_name = models.CharField(
-        'Имя', max_length=150, blank=True, null=True)
-    last_name = models.CharField(
-        'Фамилия', max_length=150, blank=True, null=True)
+    email = models.EmailField(
+        'Почта', max_length=MAX_EMAIL_LENGTH, unique=True)
     bio = models.TextField('Био', blank=True, null=True)
     role = models.CharField(
-        'Роль', choices=ROLE_CHOICES, default='user', max_length=9)
+        'Роль', choices=ROLE_CHOICES, default=USER,
+        max_length=max([len(role[0]) for role in ROLE_CHOICES]))
     confirmation_code = models.CharField(
-        'Код подтверждения', blank=True, null=True, max_length=4)
+        'Код подтверждения', blank=True,
+        null=True, max_length=CONFIRMATION_CODE_LENGTH)
+
+    @property
+    def is_admin(self):
+        return (
+            self.is_superuser or self.is_staff or self.role == ADMIN
+        )
 
     class Meta:
         verbose_name = 'пользователь'
         verbose_name_plural = 'Пользователи'
-        ordering = ('id',)
+        ordering = ('username',)
 
     def __str__(self):
         return self.username
