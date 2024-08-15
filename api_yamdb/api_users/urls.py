@@ -10,5 +10,5 @@ urlpatterns = [
     path('auth/token/', GetTokenAPIView.as_view()),
     path('users/', CustomUserListCreateAPIView.as_view()),
     path('users/me/', CustomUserRetrieveUpdateAPIView.as_view()),
-    path('users/<username>/', CustomUserRetrieveUpdateDestroyAPIView.as_view()),
+    path('users/<username>/', CustomUserRetrieveUpdateDestroyAPIView.as_view())
 ]
