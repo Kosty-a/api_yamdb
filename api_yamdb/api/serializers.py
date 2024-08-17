@@ -1,7 +1,5 @@
 from datetime import date as dt
 
-from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Avg
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genre, Review, Title
@@ -28,11 +26,7 @@ class ListDetailTitleSerializer(serializers.ModelSerializer):
 
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
-    rating = serializers.SerializerMethodField()
-
-    def get_rating(self, obj):
-        '''Функция получает среднее значение оценки рейтинга.'''
-        return obj.review.aggregate(Avg('score'))['score__avg']
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
@@ -45,24 +39,28 @@ class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Title."""
 
     genre = serializers.SlugRelatedField(
-        slug_field='slug', many=True, queryset=Genre.objects.all()
+        slug_field='slug', many=True, allow_empty=False,
+        allow_null=False, queryset=Genre.objects.all()
     )
     category = serializers.SlugRelatedField(
         slug_field='slug', queryset=Category.objects.all()
     )
+    rating = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Title
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
+        )
 
     def validate_year(self, value):
         '''Функция проверяет, что год не более текущего.'''
         year = dt.today().year
         if value > year:
-            raise serializers.ValidationError(
+            raise serializers.ValidatorError(
                 'Год не может быть больше текущего.'
             )
         return value
-
-    class Meta:
-        model = Title
-        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -72,22 +70,25 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True, slug_field='username'
     )
 
-    def create(self, validated_data):
-        '''Функция проверяет, что автор ранее не оставлял отзыв
-        на данное произведение.
-        '''
-        title = validated_data.get('title')
-        author = validated_data.get('author')
-        try:
-            Review.objects.get(title=title, author=author)
-            raise serializers.ValidationError('Review already exists')
-        except ObjectDoesNotExist:
-            return Review.objects.create(**validated_data)
-
     class Meta:
         model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date')
-        read_only_fields = ('title',)
+
+    def validate(self, data):
+        '''Функция проверяет, что автор ранее не оставлял отзыв
+        на данное произведение.
+        '''
+        request = self.context.get('request')
+        if request.method == 'POST':
+            review = Review.objects.filter(
+                title=self.context['view'].kwargs.get('title_id'),
+                author=self.context['request'].user
+            )
+            if review.exists():
+                raise serializers.ValidationError(
+                    'Review already exists'
+                )
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):

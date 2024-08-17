@@ -1,14 +1,20 @@
+from datetime import date as dt
+
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from reviews.constants import (LENGHT_SLUG_FIELD, LENGHT_TEXT_FIELD,
-                               MAX_REPRESENTATION_LENGHT)
+
+from core.constants import (
+    LENGHT_TEXT_FIELD, MAX_REPRESENTATION_LENGHT, MAX_SCORE, MIN_SCORE)
+from core.models import CategoryGenreBaseModel, ReviewCommentBaseModel
+
 
 User = get_user_model()
 
 
-class Category(models.Model):
+class Category(CategoryGenreBaseModel):
     '''Модель категории произведений («Фильмы», «Книги», «Музыка»).
+
     Одно произведение может быть привязано только к одной категории.
     '''
 
@@ -16,24 +22,15 @@ class Category(models.Model):
         max_length=LENGHT_TEXT_FIELD,
         verbose_name='Категория'
     )
-    slug = models.SlugField(
-        max_length=LENGHT_SLUG_FIELD,
-        unique=True,
-        verbose_name='Идентификатор'
-    )
 
-    class Meta:
-        default_related_name = 'category'
+    class Meta(CategoryGenreBaseModel.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
-        ordering = ('id',)
-
-    def __str__(self):
-        return self.name[:MAX_REPRESENTATION_LENGHT]
 
 
-class Genre(models.Model):
+class Genre(CategoryGenreBaseModel):
     '''Модель жанров произведений.
+
     Одно произведение может быть привязано к нескольким жанрам.
     '''
 
@@ -41,24 +38,15 @@ class Genre(models.Model):
         max_length=LENGHT_TEXT_FIELD,
         verbose_name='Жанр'
     )
-    slug = models.SlugField(
-        max_length=LENGHT_SLUG_FIELD,
-        unique=True,
-        verbose_name='Идентификатор'
-    )
 
-    class Meta:
-        default_related_name = 'genre'
+    class Meta(CategoryGenreBaseModel.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
-        ordering = ('id',)
-
-    def __str__(self):
-        return self.name[:MAX_REPRESENTATION_LENGHT]
 
 
 class Title(models.Model):
     '''Модель произведений, к которым пишут отзывы.
+
     Определённый фильм, книга или песенка.
     Нельзя добавлять произведения, которые еще не вышли
     (год выпуска не может быть больше текущего).
@@ -70,7 +58,10 @@ class Title(models.Model):
         max_length=LENGHT_TEXT_FIELD,
         verbose_name='Произведение'
     )
-    year = models.IntegerField(verbose_name='Год выпуска')
+    year = models.SmallIntegerField(
+        verbose_name='Год выпуска',
+        validators=[MaxValueValidator(dt.today().year)]
+    )
     description = models.TextField(
         blank=True, null=True,
         verbose_name='Описание'
@@ -89,7 +80,7 @@ class Title(models.Model):
     )
 
     class Meta:
-        default_related_name = 'title'
+        default_related_name = 'titles'
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
         ordering = ('name',)
@@ -97,9 +88,13 @@ class Title(models.Model):
     def __str__(self):
         return self.name[:MAX_REPRESENTATION_LENGHT]
 
+    def genre_names(self):
+        return " %s" % (", ".join([genre.name for genre in self.genre.all()]))
+
 
 class GenreTitle(models.Model):
     '''Модель жанров (Genre) и произведений (Title).
+
     Связь между моделями ManyToMany.
     '''
 
@@ -124,8 +119,9 @@ class GenreTitle(models.Model):
         return f'У произведения "{self.title}" жанр "{self.genre}".'
 
 
-class Review(models.Model):
+class Review(ReviewCommentBaseModel):
     '''Модель отзывов на произведения.
+
     Отзыв привязан к определённому произведению.
     '''
 
@@ -136,35 +132,25 @@ class Review(models.Model):
     )
     text = models.TextField(verbose_name='Текст отзыва')
     score = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        validators=[
+            MinValueValidator(MIN_SCORE), MaxValueValidator(MAX_SCORE)
+        ],
         verbose_name='Оценка'
     )
-    pub_date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='Дата добавления отзыва и оценки'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name='Автор отзыва'
-    )
 
-    class Meta:
-        default_related_name = 'review'
+    class Meta(ReviewCommentBaseModel.Meta):
+        default_related_name = 'reviews'
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
-        ordering = ('pub_date',)
         constraints = [
             models.UniqueConstraint(fields=['title', 'author'],
                                     name='unique_review')
         ]
 
-    def __str__(self):
-        return self.text[:MAX_REPRESENTATION_LENGHT]
 
-
-class Comment(models.Model):
+class Comment(ReviewCommentBaseModel):
     '''Модель комментариев к отзывам.
+
     Комментарий привязан к определённому отзыву.
     '''
 
@@ -174,21 +160,8 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Отзыв'
     )
-    pub_date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='Дата добавления комментария'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name='Автор комментария'
-    )
 
-    class Meta:
+    class Meta(ReviewCommentBaseModel.Meta):
         default_related_name = 'comments'
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
-        ordering = ('pub_date',)
-
-    def __str__(self):
-        return self.text[:MAX_REPRESENTATION_LENGHT]

@@ -16,7 +16,7 @@ class TitleFilter(FilterSet):
     name = django_filters.CharFilter(
         field_name='name', lookup_expr='icontains'
     )
-    year = django_filters.NumberFilter(field_name='year', lookup_expr='exact')
+    year = django_filters.NumberFilter(field_name='year')
 
     class Meta:
         model = Title

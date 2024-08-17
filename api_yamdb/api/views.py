@@ -1,7 +1,7 @@
+from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets
+from rest_framework import permissions, viewsets
 from rest_framework.generics import get_object_or_404
-from reviews.models import Category, Genre, Review, Title
 
 from api.core import CategoryAndGenreViewSet
 from api.filters import TitleFilter
@@ -10,6 +10,7 @@ from api.permissions import (AdminOrReadOnly,
 from api.serializers import (CategorySerializer, CommentSerializer,
                              GenreSerializer, ListDetailTitleSerializer,
                              ReviewSerializer, TitleSerializer)
+from reviews.models import Category, Genre, Review, Title
 
 
 class CategoryViewSet(CategoryAndGenreViewSet):
@@ -29,14 +30,16 @@ class GenreViewSet(CategoryAndGenreViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для модели Title."""
 
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().annotate(
+        rating=Avg('reviews__score')
+    ).order_by('name')
     permission_classes = (AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     http_method_names = ["get", "post", "patch", "delete"]
 
     def get_serializer_class(self):
-        if self.request.method == 'GET':
+        if self.request.method in permissions.SAFE_METHODS:
             return ListDetailTitleSerializer
         return TitleSerializer
 
@@ -55,7 +58,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
 
     def get_queryset(self):
-        return self._get_title_or_404().review.all()
+        return self._get_title_or_404().reviews.all()
 
     def perform_create(self, serializer):
         serializer.save(
