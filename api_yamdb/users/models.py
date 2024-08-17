@@ -1,10 +1,10 @@
+from core.constants import (ADMIN, CONFIRMATION_CODE_LENGTH, MAX_EMAIL_LENGTH,
+                            MAX_USERNAME_LENGTH, MODERATOR, REGEX_USERNAME,
+                            USER)
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
 
-from core.constants import (ADMIN, CONFIRMATION_CODE_LENGTH, MAX_EMAIL_LENGTH,
-                            MAX_USERNAME_LENGTH, MODERATOR, REGEX_USERNAME,
-                            USER, ADMIN)
 from .validators import validate_not_me
 
 

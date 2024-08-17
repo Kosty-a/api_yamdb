@@ -1,6 +1,5 @@
-from django.core.exceptions import ValidationError
-
 from core.constants import ME
+from django.core.exceptions import ValidationError
 
 
 def validate_not_me(value):
