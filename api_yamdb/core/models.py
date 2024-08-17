@@ -30,7 +30,7 @@ class ReviewCommentBaseModel(models.Model):
     """
     Абстрактная модель для моделей Review и Comment.
 
- 
+
     Добавляет дату добавления отзыва или комментария и автора.
     """
 
