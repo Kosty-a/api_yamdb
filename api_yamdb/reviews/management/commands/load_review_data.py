@@ -1,7 +1,10 @@
 from csv import DictReader
-from django.core.management import BaseCommand
 
-from reviews.models import Title, Review
+from django.contrib.auth import get_user_model
+from django.core.management import BaseCommand
+from reviews.models import Review, Title
+
+User = get_user_model()
 
 
 class Command(BaseCommand):
@@ -19,5 +22,6 @@ class Command(BaseCommand):
                 title = Title.objects.get(pk=row['title_id'])
                 author = User.objects.get(pk=row['author'])
                 review = Review(
-                    id=row['id'], title=title, text=row['text'], )
+                    id=row['id'], title=title, text=row['text'], author=author,
+                    score=row['score'], pub_date=row['pub_date'])
                 review.save()

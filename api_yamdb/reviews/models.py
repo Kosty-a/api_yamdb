@@ -8,6 +8,7 @@ from core.constants import (
     LENGHT_TEXT_FIELD, MAX_REPRESENTATION_LENGHT, MAX_SCORE, MIN_SCORE)
 from core.models import CategoryGenreBaseModel, ReviewCommentBaseModel
 
+
 User = get_user_model()
 
 
