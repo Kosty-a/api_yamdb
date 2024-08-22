@@ -1,6 +1,7 @@
 from datetime import date as dt
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
@@ -12,16 +13,20 @@ from core.models import CategoryGenreBaseModel, ReviewCommentBaseModel
 User = get_user_model()
 
 
+def year_validators(year):
+    '''Функция проверяет, что год не более текущего.'''
+    year_now = dt.today().year
+    if year > year_now:
+        raise ValidationError(
+            'Год не может быть больше текущего.'
+        )
+
+
 class Category(CategoryGenreBaseModel):
     '''Модель категории произведений («Фильмы», «Книги», «Музыка»).
 
     Одно произведение может быть привязано только к одной категории.
     '''
-
-    name = models.CharField(
-        max_length=LENGHT_TEXT_FIELD,
-        verbose_name='Категория'
-    )
 
     class Meta(CategoryGenreBaseModel.Meta):
         verbose_name = 'Категория'
@@ -33,11 +38,6 @@ class Genre(CategoryGenreBaseModel):
 
     Одно произведение может быть привязано к нескольким жанрам.
     '''
-
-    name = models.CharField(
-        max_length=LENGHT_TEXT_FIELD,
-        verbose_name='Жанр'
-    )
 
     class Meta(CategoryGenreBaseModel.Meta):
         verbose_name = 'Жанр'
@@ -60,7 +60,7 @@ class Title(models.Model):
     )
     year = models.SmallIntegerField(
         verbose_name='Год выпуска',
-        validators=[MaxValueValidator(dt.today().year)]
+        validators=[year_validators]
     )
     description = models.TextField(
         blank=True, null=True,
@@ -110,7 +110,7 @@ class GenreTitle(models.Model):
     )
 
     class Meta:
-        default_related_name = 'genretitle'
+        default_related_name = 'genretitles'
         verbose_name = 'Произведение и жанр'
         verbose_name_plural = 'Произведения и жанры'
         ordering = ('title',)
@@ -130,7 +130,6 @@ class Review(ReviewCommentBaseModel):
         on_delete=models.CASCADE,
         verbose_name='Произведение'
     )
-    text = models.TextField(verbose_name='Текст отзыва')
     score = models.PositiveSmallIntegerField(
         validators=[
             MinValueValidator(MIN_SCORE), MaxValueValidator(MAX_SCORE)
@@ -154,7 +153,6 @@ class Comment(ReviewCommentBaseModel):
     Комментарий привязан к определённому отзыву.
     '''
 
-    text = models.TextField(verbose_name='Текст комментария')
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,

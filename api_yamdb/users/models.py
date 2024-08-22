@@ -41,6 +41,12 @@ class CustomUser(AbstractUser):
             self.is_superuser or self.is_staff or self.role == ADMIN
         )
 
+    @property
+    def is_moderator(self):
+        return (
+            self.role == MODERATOR
+        )
+
     class Meta:
         verbose_name = 'пользователь'
         verbose_name_plural = 'Пользователи'

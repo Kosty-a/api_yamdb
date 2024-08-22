@@ -26,10 +26,6 @@ class IsAdminOrModeratorOrAuthorOrReadOnly(permissions.BasePermission):
     только чтение или работа с безопасными методам (GET, HEAD, OPTIONS).
     '''
 
-    def has_permission(self, request, view):
-        return (request.method in permissions.SAFE_METHODS
-                or request.user.is_authenticated)
-
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
@@ -37,6 +33,6 @@ class IsAdminOrModeratorOrAuthorOrReadOnly(permissions.BasePermission):
             return (
                 (request.user.is_authenticated and request.method == 'POST')
                 or request.user.is_admin
-                or request.user.role == MODERATOR
+                or request.user.is_moderator
                 or obj.author == request.user
             )

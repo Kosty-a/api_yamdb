@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
-from core.constants import MAX_REPRESENTATION_LENGHT
+from core.constants import LENGHT_TEXT_FIELD, MAX_REPRESENTATION_LENGHT
 
 User = get_user_model()
 
@@ -13,6 +13,10 @@ class CategoryGenreBaseModel(models.Model):
     Добавляет идентификатор и сортировку по наименованию.
     """
 
+    name = models.CharField(
+        max_length=LENGHT_TEXT_FIELD,
+        verbose_name='Наименование'
+    )
     slug = models.SlugField(
         unique=True,
         verbose_name='Идентификатор'
@@ -43,6 +47,7 @@ class ReviewCommentBaseModel(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Автор'
     )
+    text = models.TextField(verbose_name='Текст')
 
     class Meta:
         abstract = True
