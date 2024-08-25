@@ -28,4 +28,4 @@ MODERATOR = 'moderator'
 USER = 'user'
 
 # Запрещённое имя пользователя.
-INVALID_USERNAME_ME = 'me'
+INVALID_USERNAME = 'me'

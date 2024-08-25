@@ -42,9 +42,9 @@ class SignUpSerializer(serializers.Serializer):
 
         if User.objects.filter(username=username, email=email):
             return data
-        elif User.objects.filter(username=username):
+        if User.objects.filter(username=username):
             raise serializers.ValidationError('Invalid email for user')
-        elif User.objects.filter(email=email):
+        if User.objects.filter(email=email):
             raise serializers.ValidationError('Invalid username for user')
 
         return data

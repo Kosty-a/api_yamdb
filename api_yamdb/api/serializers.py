@@ -62,10 +62,7 @@ class TitleSerializer(serializers.ModelSerializer):
         return value
 
     def to_representation(self, instance):
-        self.fields['genre'] = GenreSerializer(read_only=True, many=True)
-        self.fields['category'] = CategorySerializer(read_only=True)
-        self.fields['rating'] = ListDetailTitleSerializer(read_only=True)
-        return super(TitleSerializer, self).to_representation(instance)
+        return ListDetailTitleSerializer.to_representation(self, instance)
 
 
 class ReviewSerializer(serializers.ModelSerializer):
