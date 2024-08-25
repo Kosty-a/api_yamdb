@@ -18,13 +18,11 @@ class SignUpAPIView(APIView):
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data,
-                            status=status.HTTP_200_OK)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-        return Response(serializer.errors,
-                        status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data,
+                        status=status.HTTP_200_OK)
 
 
 class ObtainTokenAPIView(APIView):
@@ -32,17 +30,16 @@ class ObtainTokenAPIView(APIView):
     def post(self, request):
         serializer = ObtainTokenSerializer(data=request.data)
 
-        if serializer.is_valid():
-            user = User.objects.get(username=serializer.data['username'])
-            if user.confirmation_code == serializer.data['confirmation_code']:
-                refresh = RefreshToken.for_user(user)
-                return Response(
-                    {'token': str(refresh.access_token)},
-                    status=status.HTTP_200_OK
-                )
+        serializer.is_valid(raise_exception=True)
 
-        return Response(serializer.errors,
-                        status=status.HTTP_400_BAD_REQUEST)
+        username = serializer.data['username']
+        user = User.objects.get(username=username)
+        refresh = RefreshToken.for_user(user)
+
+        return Response(
+            {'token': str(refresh.access_token)},
+            status=status.HTTP_200_OK
+        )
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -58,17 +55,14 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes=(permissions.IsAuthenticated,))
     def me(self, request):
         user = request.user
-        data = request.data.copy()
+        data = request.data
 
         if request.method == 'GET':
             serializer = UserSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-        if 'role' in data:
-            data.pop('role')
-
         serializer = UserSerializer(user, data=data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(role=user.role)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)

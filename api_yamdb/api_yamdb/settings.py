@@ -107,6 +107,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+STATIC_DATA_URL = 'static/data/'
+
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
 AUTH_USER_MODEL = 'users.CustomUser'
