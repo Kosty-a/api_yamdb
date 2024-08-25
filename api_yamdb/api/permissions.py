@@ -1,7 +1,5 @@
 from rest_framework import permissions
 
-from core.constants import MODERATOR
-
 
 class AdminOrReadOnly(permissions.BasePermission):
     '''Разрешаем добавление, обновление или удаление объектов администратору.
