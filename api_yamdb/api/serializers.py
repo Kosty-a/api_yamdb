@@ -26,7 +26,7 @@ class ListDetailTitleSerializer(serializers.ModelSerializer):
 
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
-    rating = serializers.IntegerField(read_only=True)
+    rating = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         model = Title
@@ -45,12 +45,11 @@ class TitleSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         slug_field='slug', queryset=Category.objects.all()
     )
-    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
         fields = (
-            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
+            'id', 'name', 'year', 'description', 'genre', 'category'
         )
 
     def validate_year(self, value):
@@ -61,6 +60,12 @@ class TitleSerializer(serializers.ModelSerializer):
                 'Год не может быть больше текущего.'
             )
         return value
+
+    def to_representation(self, instance):
+        self.fields['genre'] = GenreSerializer(read_only=True, many=True)
+        self.fields['category'] = CategorySerializer(read_only=True)
+        self.fields['rating'] = ListDetailTitleSerializer(read_only=True)
+        return super(TitleSerializer, self).to_representation(instance)
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -101,4 +106,3 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ('id', 'text', 'author', 'pub_date')
-        read_only_fields = ('review',)

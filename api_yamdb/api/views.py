@@ -2,6 +2,7 @@ from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, viewsets
 from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from api.core import CategoryAndGenreViewSet
 from api.filters import TitleFilter
@@ -48,7 +49,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для модели Review."""
 
     serializer_class = ReviewSerializer
-    permission_classes = (IsAdminOrModeratorOrAuthorOrReadOnly,)
+    permission_classes = (
+        IsAdminOrModeratorOrAuthorOrReadOnly, IsAuthenticatedOrReadOnly
+    )
     http_method_names = ["get", "post", "patch", "delete"]
 
     def _get_title_or_404(self):
@@ -70,7 +73,9 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для модели Comment."""
 
     serializer_class = CommentSerializer
-    permission_classes = (IsAdminOrModeratorOrAuthorOrReadOnly,)
+    permission_classes = (
+        IsAdminOrModeratorOrAuthorOrReadOnly, IsAuthenticatedOrReadOnly
+    )
     http_method_names = ["get", "post", "patch", "delete"]
 
     def _get_review_or_404(self):
